@@ -5,6 +5,7 @@ import { errorHandler } from "./middlewares/errorHandler";
 import { logger } from "./middlewares/logger";
 import { notFound } from "./middlewares/notFound";
 import { requestId } from "./middlewares/requestId";
+import metasRoutes from "./routes/metas.routes";
 import partidasRoutes from "./routes/partidas.routes";
 import videojuegosRoutes from "./routes/videojuegos.routes";
 
@@ -27,6 +28,7 @@ app.get("/api/health", (_req, res) => {
 
 app.use("/api/videojuegos", videojuegosRoutes);
 app.use("/api/partidas", partidasRoutes);
+app.use("/api/metas", metasRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
