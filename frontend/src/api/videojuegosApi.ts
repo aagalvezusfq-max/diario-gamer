@@ -1,4 +1,4 @@
-import type { DatosVideojuego, FiltroVideojuegos, ResumenVideojuego, Videojuego } from "../types";
+import type { DatosVideojuego, FiltroVideojuegos, ProgresoSemanal, ResumenVideojuego, Videojuego } from "../types";
 import { api } from "./client";
 
 function consulta(filtro: FiltroVideojuegos = {}): string {
@@ -33,6 +33,10 @@ export function eliminarVideojuego(id: string) {
 
 export function obtenerResumen(id: string) {
   return api<ResumenVideojuego>(`/api/videojuegos/${id}/resumen`);
+}
+
+export function obtenerProgresoSemanal(id: string) {
+  return api<ProgresoSemanal>(`/api/videojuegos/${id}/progreso-semanal`);
 }
 
 export function actualizarLogro(videojuegoId: string, logroId: string, obtenido: boolean) {

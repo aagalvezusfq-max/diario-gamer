@@ -281,6 +281,15 @@ textarea { resize: vertical; }
 }
 
 .nota-vacia { margin-top: 0.8rem; }
+.semana { margin-bottom: 1rem; }
+.semana .acciones { margin-top: 1rem; justify-content: flex-start; }
+.racha-mejor { display: block; margin-top: 0.2rem; color: var(--faint); font-family: var(--sans); font-size: 0.85rem; }
+.hitos-meta { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: 0.45rem; }
+.hito-meta { display: flex; justify-content: space-between; gap: 1rem; align-items: center; padding: 0.75rem 0.85rem; border: 1px solid var(--line); border-radius: 12px; background: var(--bg); }
+.hito-meta.alcanzado { border-color: color-mix(in srgb, var(--mint) 55%, transparent); }
+.hito-meta b { color: var(--muted); font-weight: 500; }
+.hito-meta.alcanzado b { color: var(--mint); }
+.acciones-sesion { display: flex; justify-content: flex-end; gap: 0.4rem; }
 
 .detalle-grid { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 1rem; }
 
