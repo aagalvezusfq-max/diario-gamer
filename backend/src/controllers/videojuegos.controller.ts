@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
+import * as metasController from "./metas.controller";
 import * as partidasService from "../services/partidas.service";
+import * as progresoService from "../services/progreso.service";
 import * as videojuegosService from "../services/videojuegos.service";
 import { asyncHandler } from "../utils/asyncHandler";
 
@@ -46,6 +48,13 @@ export const resumen = asyncHandler(async (req: Request, res: Response) => {
   const calculado = await videojuegosService.obtenerResumen(req.params.id);
   res.json(calculado);
 });
+
+export const progresoSemanal = asyncHandler(async (req: Request, res: Response) => {
+  const progreso = await progresoService.obtenerProgresoSemanal(req.params.id);
+  res.json(progreso);
+});
+
+export const metas = metasController.listarPorVideojuego;
 
 export const actualizarLogro = asyncHandler(async (req: Request, res: Response) => {
   const videojuego = await videojuegosService.actualizarLogro(req.params.id, req.params.logroId, req.body?.obtenido);
