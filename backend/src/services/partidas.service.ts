@@ -1,4 +1,5 @@
 import { FilterQuery } from "mongoose";
+import { limiteHasta } from "../dominio/fechas";
 import { AppError } from "../errors/AppError";
 import { IPartida, Partida } from "../models/Partida";
 import { Videojuego } from "../models/Videojuego";
@@ -37,7 +38,10 @@ export async function listar(filtro: FiltroPartidas): Promise<IPartida[]> {
   if (filtro.desde || filtro.hasta) {
     const rango: { $gte?: Date; $lte?: Date } = {};
     if (filtro.desde) rango.$gte = fechaValida(filtro.desde, "desde");
-    if (filtro.hasta) rango.$lte = fechaValida(filtro.hasta, "hasta");
+    if (filtro.hasta) {
+      fechaValida(filtro.hasta, "hasta");
+      rango.$lte = limiteHasta(filtro.hasta);
+    }
     consulta.fecha = rango;
   }
 
@@ -71,6 +75,29 @@ export async function crear(datos: DatosPartida): Promise<IPartida> {
     notas: notas || undefined,
   });
 
+  return partida.populate("videojuego");
+}
+
+export async function obtenerPorId(id: string): Promise<IPartida> {
+  assertObjectId(id);
+  const partida = await Partida.findById(id).populate("videojuego");
+  if (!partida) throw new AppError("Partida no encontrada", 404, "no_encontrado");
+  return partida;
+}
+
+export async function actualizar(id: string, datos: DatosPartida): Promise<IPartida> {
+  assertObjectId(id);
+  const partida = await Partida.findById(id);
+  if (!partida) throw new AppError("Partida no encontrada", 404, "no_encontrado");
+
+  const notas = typeof datos.notas === "string" ? datos.notas.trim() : partida.notas;
+  partida.set({
+    fecha: datos.fecha ?? partida.fecha,
+    duracionMinutos: datos.duracionMinutos ?? partida.duracionMinutos,
+    porcentajeAvance: datos.porcentajeAvance ?? partida.porcentajeAvance,
+    notas: notas || undefined,
+  });
+  await partida.save();
   return partida.populate("videojuego");
 }
 
