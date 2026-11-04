@@ -76,6 +76,8 @@ Criterios:
 | T-09 | Deuda | test | `calcularResumen` queda cubierto por tests de horas, partida más reciente y lista vacía. | Diagnóstico |
 | T-10 | Deuda | dominio | El límite `hasta` incluye el día civil completo, con test. | Diagnóstico |
 
+Todos los tickets de esta tabla están hechos en `feature/e2-metas-rachas`. La evidencia está en `docs/AUDITORIA.md`.
+
 ## Deuda técnica que se difiere
 
 | Problema | Motivo para diferirlo |

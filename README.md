@@ -2,7 +2,9 @@
 
 Aplicación web para que cada estudiante lleve el control de los videojuegos que posee, las partidas que juega y un resumen calculado de su progreso real.
 
-La pregunta que responde es: **¿qué estoy jugando ahora, cuánto le he dedicado y qué tan avanzado voy?**
+La pregunta del Proyecto 3 es: **¿qué estoy jugando ahora, cuánto le he dedicado y qué tan avanzado voy?**
+
+La épica E2 agrega otra: **¿estoy cumpliendo lo que me propuse esta semana y cuántos días seguidos llevo jugando?**
 
 El modelado reutiliza el criterio del ejercicio de Pawnee (Criaturas y Avistamientos): una lista corta que siempre se lee con su dueño va embebida, y los eventos que crecen sin límite van en otra colección, referenciados. La pieza nueva es que el backend no solo guarda y lee: calcula un resumen a partir de las partidas.
 
@@ -223,3 +225,29 @@ Cuando existan, reemplaza estas dos líneas con las URLs reales.
 3. Abrir el detalle y comprobar que el resumen muestra la suma de horas, el número de partidas, la fecha más reciente y el avance de esa partida.
 4. Marcar un logro como obtenido. Eso actualiza el subdocumento embebido, sin recalcular el resumen.
 5. Borrar una partida y ver que horas, total y, si era la última, el avance cambian.
+
+La demo de E2, en no más de 6 minutos: crear una meta con hitos, registrar partidas y ver la semana y la racha, alcanzar un hito, provocar el 409 de meta duplicada, y seguir un criterio desde el PRD hasta `docs/AUDITORIA.md`.
+
+## Meta y progreso semanal
+
+`GET /api/videojuegos/:id/progreso-semanal` no guarda el resultado. La semana es lunes a domingo en Ecuador. Las horas, los días distintos, la racha y los hitos salen de funciones puras en `backend/src/dominio/progreso.ts`. El porcentaje puede pasar de 100. Sin meta activa, `meta` y `porcentajeHoras` vienen en `null`.
+
+La meta es otra colección, ligada al videojuego. Los hitos van dentro de ella. `alcanzado` no se guarda: se compara con el avance actual del resumen.
+
+## Cómo trabajamos con el agente
+
+El harness está en la raíz: `AGENTS.md` (memoria, máximo 60 líneas), `CLAUDE.md` (apunta a ese archivo), la skill `.claude/skills/nueva-spec` y los hooks de `.claude/settings.json`. Uno bloquea cualquier edición de `.env`. El otro pasa el archivo por Prettier. La interfaz sigue `DESIGN.md`; `AGENTS.md` solo dice que hay que leerlo.
+
+El orden en Git es el de las sesiones: diagnóstico, harness, PRD, épicas, historias y tickets, specs, y recién ahí el código. Cada spec está commiteada antes que los archivos que la implementan. Los commits de código nombran el ticket (`feat(E2): T-04 ...`).
+
+| Documento | Dónde |
+| --- | --- |
+| Diagnóstico | `docs/diagnostico.md` |
+| PRD y huecos | `docs/prd/diario-progreso-gamer.md` |
+| Épicas | `docs/backlog/epicas.md` |
+| Historias, criterios y tickets | `docs/backlog/E2-metas-y-rachas.md` |
+| Specs | `docs/specs/` |
+| Auditoría | `docs/AUDITORIA.md` |
+| Bitácora del agente | `docs/bitacora-agente.md` |
+
+`npm test` en `backend` ejecuta los tests de dominio, del resumen y del límite `hasta`. E2 no agrega variables de entorno.
