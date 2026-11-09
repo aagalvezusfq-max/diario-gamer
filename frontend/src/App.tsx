@@ -1,6 +1,7 @@
 import { Link, Route, Routes } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { DetalleVideojuegoPage } from "./pages/DetalleVideojuegoPage";
+import { FormMetaPage } from "./pages/FormMetaPage";
 import { FormPartidaPage } from "./pages/FormPartidaPage";
 import { FormVideojuegoPage } from "./pages/FormVideojuegoPage";
 import { ListaPartidasPage } from "./pages/ListaPartidasPage";
@@ -27,6 +28,9 @@ export function App() {
         <Route path="/videojuegos/:id" element={<DetalleVideojuegoPage />} />
         <Route path="/videojuegos/:id/editar" element={<FormVideojuegoPage />} />
         <Route path="/videojuegos/:id/partidas/nueva" element={<FormPartidaPage />} />
+        <Route path="/videojuegos/:id/partidas/:partidaId/editar" element={<FormPartidaPage />} />
+        <Route path="/videojuegos/:id/meta" element={<FormMetaPage />} />
+        <Route path="/videojuegos/:id/meta/:metaId" element={<FormMetaPage />} />
         <Route path="/partidas" element={<ListaPartidasPage />} />
         <Route path="/partidas/nueva" element={<FormPartidaPage />} />
         <Route path="*" element={<NoEncontrada />} />

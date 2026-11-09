@@ -69,3 +69,36 @@ export interface DatosPartida {
   porcentajeAvance: number;
   notas?: string;
 }
+
+export interface HitoMeta {
+  _id?: string;
+  descripcion: string;
+  porcentajeObjetivo: number;
+}
+
+export interface Meta {
+  _id: string;
+  videojuego: string;
+  horasSemanales: number;
+  diasPorSemana: number;
+  activa: boolean;
+  hitos: HitoMeta[];
+}
+
+export interface ProgresoSemanal {
+  semana: { inicio: string; fin: string };
+  meta: { horasSemanales: number; diasPorSemana: number } | null;
+  horasSemana: number;
+  porcentajeHoras: number | null;
+  diasJugadosSemana: number;
+  rachaActual: number;
+  mejorRacha: number;
+  hitos: { descripcion: string; porcentajeObjetivo: number; alcanzado: boolean }[];
+}
+
+export interface DatosMeta {
+  videojuego: string;
+  horasSemanales: number;
+  diasPorSemana: number;
+  hitos: { _id?: string; descripcion: string; porcentajeObjetivo: number }[];
+}

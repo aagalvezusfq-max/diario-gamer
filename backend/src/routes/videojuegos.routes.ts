@@ -7,6 +7,8 @@ router.get("/", ctrl.listar);
 router.post("/", ctrl.crear);
 router.get("/:id/partidas", ctrl.partidas);
 router.get("/:id/resumen", ctrl.resumen);
+router.get("/:id/progreso-semanal", ctrl.progresoSemanal);
+router.get("/:id/metas", ctrl.metas);
 router.patch("/:id/logros/:logroId", ctrl.actualizarLogro);
 router.get("/:id", ctrl.obtener);
 router.put("/:id", ctrl.actualizar);

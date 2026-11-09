@@ -1,6 +1,7 @@
 import { FilterQuery } from "mongoose";
 import { AppError } from "../errors/AppError";
 import { Partida } from "../models/Partida";
+import { desactivarActivaDe, eliminarDeVideojuego } from "./metas.service";
 import {
   ESTADOS,
   GENEROS,
@@ -134,6 +135,9 @@ export async function actualizar(id: string, datos: DatosVideojuego): Promise<IV
   if (!videojuego) {
     throw new AppError("Videojuego no encontrado", 404, "no_encontrado");
   }
+  if (videojuego.estado === "completado" || videojuego.estado === "abandonado") {
+    await desactivarActivaDe(videojuego.id);
+  }
   return videojuego;
 }
 
@@ -144,6 +148,7 @@ export async function eliminar(id: string): Promise<void> {
     throw new AppError("Videojuego no encontrado", 404, "no_encontrado");
   }
   await Partida.deleteMany({ videojuego: videojuego._id });
+  await eliminarDeVideojuego(videojuego.id);
 }
 
 export async function actualizarLogro(videojuegoId: string, logroId: string, obtenido: unknown): Promise<IVideojuego> {

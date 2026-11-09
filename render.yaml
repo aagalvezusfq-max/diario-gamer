@@ -6,13 +6,17 @@ services:
     rootDir: backend
     buildCommand: npm install && npm run build
     startCommand: npm start
+    healthCheckPath: /api/health
     envVars:
       - key: NODE_ENV
         value: production
       - key: MONGODB_URI
         sync: false
       - key: CORS_ORIGIN
-        sync: false
+        fromService:
+          name: diario-gamer-web
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
 
   - type: web
     name: diario-gamer-web
@@ -22,7 +26,10 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        sync: false
+        fromService:
+          name: diario-gamer-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
     routes:
       - type: rewrite
         source: /*

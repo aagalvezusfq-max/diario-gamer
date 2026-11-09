@@ -3,6 +3,7 @@ export type TipoError =
   | "id_mal_formado"
   | "referencia_inexistente"
   | "no_encontrado"
+  | "conflicto"
   | "inesperado";
 
 export class AppError extends Error {

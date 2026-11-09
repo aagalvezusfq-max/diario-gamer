@@ -13,6 +13,14 @@ export function crearPartida(datos: DatosPartida) {
   return api<Partida>("/api/partidas", { method: "POST", body: datos });
 }
 
+export function obtenerPartida(id: string) {
+  return api<Partida>(`/api/partidas/${id}`);
+}
+
+export function actualizarPartida(id: string, datos: DatosPartida) {
+  return api<Partida>(`/api/partidas/${id}`, { method: "PUT", body: datos });
+}
+
 export function eliminarPartida(id: string) {
   return api<void>(`/api/partidas/${id}`, { method: "DELETE" });
 }

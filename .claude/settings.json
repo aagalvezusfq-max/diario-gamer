@@ -1,0 +1,26 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|StrReplace",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/bloquear-env.mjs"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|StrReplace",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/formatear.mjs"
+          }
+        ]
+      }
+    ]
+  }
+}

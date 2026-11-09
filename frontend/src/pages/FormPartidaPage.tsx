@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { mensajeDe } from "../api/client";
-import { crearPartida } from "../api/partidasApi";
+import { actualizarPartida, crearPartida, idDelVideojuego, obtenerPartida } from "../api/partidasApi";
 import { listarVideojuegos } from "../api/videojuegosApi";
 import { Cargando, ErrorEstado, Vacio } from "../components/Estados";
 import { Pagina } from "../components/Layout";
@@ -11,7 +11,8 @@ import type { Videojuego } from "../types";
 type Carga = "cargando" | "listo" | "error";
 
 export function FormPartidaPage() {
-  const { id } = useParams();
+  const { id, partidaId } = useParams();
+  const esEdicion = Boolean(partidaId);
   const navigate = useNavigate();
   const [carga, setCarga] = useState<Carga>("cargando");
   const [errorCarga, setErrorCarga] = useState("");
@@ -29,11 +30,19 @@ export function FormPartidaPage() {
   useEffect(() => {
     let vigente = true;
     setCarga("cargando");
-    listarVideojuegos()
-      .then((datos) => {
+    Promise.all([listarVideojuegos(), partidaId ? obtenerPartida(partidaId) : Promise.resolve(null)])
+      .then(([datos, partida]) => {
         if (!vigente) return;
         setJuegos(datos);
-        setVideojuegoId(id || datos[0]?._id || "");
+        if (partida) {
+          setVideojuegoId(idDelVideojuego(partida) ?? id ?? "");
+          setFecha(partida.fecha.slice(0, 10));
+          setDuracion(String(partida.duracionMinutos));
+          setAvance(String(partida.porcentajeAvance));
+          setNotas(partida.notas ?? "");
+        } else {
+          setVideojuegoId(id || datos[0]?._id || "");
+        }
         setCarga("listo");
       })
       .catch((err: unknown) => {
@@ -44,7 +53,7 @@ export function FormPartidaPage() {
     return () => {
       vigente = false;
     };
-  }, [id, reintento]);
+  }, [id, partidaId, reintento]);
 
   async function enviar(event: FormEvent) {
     event.preventDefault();
@@ -69,13 +78,15 @@ export function FormPartidaPage() {
 
     setEnviando(true);
     try {
-      await crearPartida({
+      const datos = {
         videojuego: videojuegoId,
         fecha,
         duracionMinutos,
         porcentajeAvance,
         notas: notas.trim() || undefined,
-      });
+      };
+      if (esEdicion && partidaId) await actualizarPartida(partidaId, datos);
+      else await crearPartida(datos);
       navigate(`/videojuegos/${videojuegoId}`);
     } catch (err: unknown) {
       const info = mensajeDe(err);
@@ -103,13 +114,13 @@ export function FormPartidaPage() {
 
   return (
     <Pagina
-      titulo="Nueva partida"
-      bajada="La sesión queda en su propia colección. Al guardarla, el resumen del juego se vuelve a calcular."
+      titulo={esEdicion ? "Editar partida" : "Nueva partida"}
+      bajada="Al guardarla, el detalle vuelve a pedir el resumen y el progreso de la semana."
     >
       <form className="formulario" onSubmit={enviar}>
         <div className="campo">
           <label htmlFor="videojuego">Videojuego</label>
-          <select id="videojuego" value={videojuegoId} onChange={(event) => setVideojuegoId(event.target.value)} required>
+          <select id="videojuego" value={videojuegoId} onChange={(event) => setVideojuegoId(event.target.value)} required disabled={esEdicion}>
             {juegos.map((juego) => (
               <option key={juego._id} value={juego._id}>
                 {juego.nombre}

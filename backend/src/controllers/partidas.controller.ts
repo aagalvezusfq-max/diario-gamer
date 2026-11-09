@@ -20,6 +20,16 @@ export const crear = asyncHandler(async (req: Request, res: Response) => {
   res.status(201).json(partida);
 });
 
+export const obtener = asyncHandler(async (req: Request, res: Response) => {
+  const partida = await partidasService.obtenerPorId(req.params.id);
+  res.json(partida);
+});
+
+export const actualizar = asyncHandler(async (req: Request, res: Response) => {
+  const partida = await partidasService.actualizar(req.params.id, req.body);
+  res.json(partida);
+});
+
 export const eliminar = asyncHandler(async (req: Request, res: Response) => {
   await partidasService.eliminar(req.params.id);
   res.status(204).send();

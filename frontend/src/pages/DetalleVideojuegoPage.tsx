@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { mensajeDe } from "../api/client";
+import { desactivarMeta, listarMetas } from "../api/metasApi";
 import { eliminarPartida, listarPartidasDeVideojuego } from "../api/partidasApi";
-import { actualizarLogro, eliminarVideojuego, obtenerResumen, obtenerVideojuego } from "../api/videojuegosApi";
+import { actualizarLogro, eliminarVideojuego, obtenerProgresoSemanal, obtenerResumen, obtenerVideojuego } from "../api/videojuegosApi";
 import { BadgeEstado } from "../components/BadgeEstado";
 import { Cargando, ErrorEstado, Vacio } from "../components/Estados";
 import { ETIQUETA_GENERO, ETIQUETA_PLATAFORMA } from "../domain/catalogo";
 import { formatearDuracion, formatearFecha, formatearHoras } from "../lib/formato";
-import type { Partida, ResumenVideojuego, Videojuego } from "../types";
+import type { Partida, ProgresoSemanal, ResumenVideojuego, Videojuego } from "../types";
 
 type Carga = "cargando" | "listo" | "error";
 
@@ -20,6 +21,8 @@ export function DetalleVideojuegoPage() {
   const [juego, setJuego] = useState<Videojuego | null>(null);
   const [resumen, setResumen] = useState<ResumenVideojuego | null>(null);
   const [partidas, setPartidas] = useState<Partida[]>([]);
+  const [progreso, setProgreso] = useState<ProgresoSemanal | null>(null);
+  const [metaActivaId, setMetaActivaId] = useState<string | null>(null);
   const [logroPendiente, setLogroPendiente] = useState<string | null>(null);
   const [eliminando, setEliminando] = useState(false);
   const [reintento, setReintento] = useState(0);
@@ -29,12 +32,20 @@ export function DetalleVideojuegoPage() {
     setCarga("cargando");
     setAviso("");
 
-    Promise.all([obtenerVideojuego(id), obtenerResumen(id), listarPartidasDeVideojuego(id)])
-      .then(([juegoData, resumenData, partidasData]) => {
+    Promise.all([
+      obtenerVideojuego(id),
+      obtenerResumen(id),
+      listarPartidasDeVideojuego(id),
+      obtenerProgresoSemanal(id),
+      listarMetas(id),
+    ])
+      .then(([juegoData, resumenData, partidasData, progresoData, metas]) => {
         if (!vigente) return;
         setJuego(juegoData);
         setResumen(resumenData);
         setPartidas(partidasData);
+        setProgreso(progresoData);
+        setMetaActivaId(metas.find((meta) => meta.activa)?._id ?? null);
         setCarga("listo");
       })
       .catch((err: unknown) => {
@@ -68,9 +79,14 @@ export function DetalleVideojuegoPage() {
     setAviso("");
     try {
       await eliminarPartida(partidaId);
-      const [resumenData, partidasData] = await Promise.all([obtenerResumen(id), listarPartidasDeVideojuego(id)]);
+      const [resumenData, partidasData, progresoData] = await Promise.all([
+        obtenerResumen(id),
+        listarPartidasDeVideojuego(id),
+        obtenerProgresoSemanal(id),
+      ]);
       setResumen(resumenData);
       setPartidas(partidasData);
+      setProgreso(progresoData);
     } catch (err: unknown) {
       setAviso(mensajeDe(err).mensaje);
     }
@@ -78,7 +94,7 @@ export function DetalleVideojuegoPage() {
 
   async function borrarJuego() {
     if (!juego) return;
-    if (!window.confirm(`¿Eliminar ${juego.nombre} y todas sus partidas?`)) return;
+    if (!window.confirm(`¿Eliminar ${juego.nombre}, sus partidas y su meta?`)) return;
     setEliminando(true);
     try {
       await eliminarVideojuego(juego._id);
@@ -89,8 +105,22 @@ export function DetalleVideojuegoPage() {
     }
   }
 
+  async function apagarMeta() {
+    if (!metaActivaId) return;
+    if (!window.confirm("¿Apagar esta meta? La semana dejará de medirse contra ella.")) return;
+    setAviso("");
+    try {
+      await desactivarMeta(metaActivaId);
+      const [progresoData, metas] = await Promise.all([obtenerProgresoSemanal(id), listarMetas(id)]);
+      setProgreso(progresoData);
+      setMetaActivaId(metas.find((meta) => meta.activa)?._id ?? null);
+    } catch (err: unknown) {
+      setAviso(mensajeDe(err).mensaje);
+    }
+  }
+
   if (carga === "cargando") return <Cargando texto="Abriendo la ficha…" />;
-  if (carga === "error" || !juego || !resumen) {
+  if (carga === "error" || !juego || !resumen || !progreso) {
     return <ErrorEstado mensaje={error || "No se pudo abrir el videojuego"} onReintentar={() => setReintento((valor) => valor + 1)} />;
   }
 
@@ -156,6 +186,84 @@ export function DetalleVideojuegoPage() {
         ) : null}
       </section>
 
+      <section className="panel semana" aria-labelledby="titulo-semana">
+        <div className="seccion-titulo">
+          <h2 id="titulo-semana">Esta semana</h2>
+          <p>
+            {formatearFecha(`${progreso.semana.inicio}T00:00:00.000Z`)} – {formatearFecha(`${progreso.semana.fin}T00:00:00.000Z`)}. Lunes a domingo, hora de Ecuador.
+          </p>
+        </div>
+        <dl className="metricas">
+          <div>
+            <dt>Horas</dt>
+            <dd>{formatearHoras(progreso.horasSemana)}</dd>
+          </div>
+          <div>
+            <dt>De la meta</dt>
+            <dd>{progreso.porcentajeHoras === null ? "—" : `${progreso.porcentajeHoras}%`}</dd>
+          </div>
+          <div>
+            <dt>Días jugados</dt>
+            <dd>
+              {progreso.diasJugadosSemana}
+              {progreso.meta ? ` de ${progreso.meta.diasPorSemana}` : ""}
+            </dd>
+          </div>
+          <div>
+            <dt>Racha</dt>
+            <dd>
+              {progreso.rachaActual}
+              <span className="racha-mejor"> mejor {progreso.mejorRacha}</span>
+            </dd>
+          </div>
+        </dl>
+        {progreso.meta ? (
+          <div className="avance-barra" role="img" aria-label={`Horas de la semana ${progreso.porcentajeHoras}%`}>
+            <span style={{ width: `${Math.min(progreso.porcentajeHoras ?? 0, 100)}%` }} />
+          </div>
+        ) : null}
+        {progreso.meta ? (
+          progreso.hitos.length === 0 ? (
+            <p className="nota-vacia">Esta meta todavía no tiene hitos.</p>
+          ) : (
+            <ul className="hitos-meta">
+              {progreso.hitos.map((hito) => (
+                <li key={`${hito.descripcion}-${hito.porcentajeObjetivo}`} className={hito.alcanzado ? "hito-meta alcanzado" : "hito-meta"}>
+                  <span>{hito.descripcion}</span>
+                  <b>{hito.alcanzado ? `Alcanzado · ${hito.porcentajeObjetivo}%` : `Pendiente · ${hito.porcentajeObjetivo}%`}</b>
+                </li>
+              ))}
+            </ul>
+          )
+        ) : (
+          <Vacio
+            titulo="Sin meta activa"
+            texto={
+              juego.estado === "completado" || juego.estado === "abandonado"
+                ? "Un juego completado o abandonado no lleva una meta encendida."
+                : "Fija horas y días para ver si esta semana vas cumpliendo."
+            }
+            accion={
+              juego.estado === "jugando" || juego.estado === "pausado" ? (
+                <Link to={`/videojuegos/${juego._id}/meta`} className="btn btn-primario">
+                  Crear meta
+                </Link>
+              ) : undefined
+            }
+          />
+        )}
+        {progreso.meta && metaActivaId ? (
+          <div className="acciones">
+            <Link to={`/videojuegos/${juego._id}/meta/${metaActivaId}`} className="btn btn-secundario">
+              Editar meta
+            </Link>
+            <button type="button" className="btn btn-peligro" onClick={apagarMeta}>
+              Desactivar
+            </button>
+          </div>
+        ) : null}
+      </section>
+
       <div className="detalle-grid">
         <section className="panel" aria-labelledby="titulo-logros">
           <div className="seccion-titulo">
@@ -217,9 +325,14 @@ export function DetalleVideojuegoPage() {
                   </div>
                   <b>{partida.porcentajeAvance}%</b>
                   <p>{partida.notas?.trim() ? partida.notas : "Sin notas"}</p>
-                  <button type="button" className="btn btn-texto" onClick={() => quitarPartida(partida._id)}>
-                    Eliminar
-                  </button>
+                  <span className="acciones-sesion">
+                    <Link to={`/videojuegos/${juego._id}/partidas/${partida._id}/editar`} className="btn btn-texto">
+                      Editar
+                    </Link>
+                    <button type="button" className="btn btn-texto" onClick={() => quitarPartida(partida._id)}>
+                      Eliminar
+                    </button>
+                  </span>
                 </li>
               ))}
             </ul>
