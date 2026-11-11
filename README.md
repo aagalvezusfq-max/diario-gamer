@@ -211,12 +211,10 @@ Hay un `render.yaml` en la raíz con los dos servicios. Las credenciales se carg
 
 ### URLs públicas
 
-Pendientes de publicar en Render:
+- API: https://diario-gamer-api.onrender.com
+- Frontend: https://diario-gamer-web.onrender.com
 
-- API: _aún no desplegada_
-- Frontend: _aún no desplegado_
-
-Cuando existan, reemplaza estas dos líneas con las URLs reales.
+El progreso de la semana está en `GET /api/videojuegos/:id/progreso-semanal`.
 
 ## Flujo de la demo
 
